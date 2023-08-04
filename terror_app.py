@@ -24,6 +24,8 @@ region = 'Middle East & North Africa'
 # options
 region_option = df['region_txt'].unique()
 grp_option = ['gname', 'attacktype1_txt', 'targtype1_txt', 'weaptype1_txt']
+value_one_option = ['nkill', 'nwound']
+value_two_option = ['count']
 
 #Data Transformation
 df_region = df.loc[df['region_txt'] == region_option[0]].reset_index(drop=True)
@@ -58,10 +60,11 @@ top_10_groups_all_regions = df[df['gname'].isin(top_10_groups_per_region_list)]
 df_hor_bar = df_region.groupby(['country_txt'])[[value_one, value_two]].sum().reset_index()
 df_hor_bar = df_hor_bar.sort_values(by=value_one, ascending=True).tail(5)
 
-# Line Chat Data
+# Pie Chart Data
 df_pie = pd.DataFrame(df_region.groupby(grp)[value_one].sum()).reset_index()
-df_pie = df_pie.sort_values(by=value_one, ascending=False).head(9)
+df_pie = df_pie.sort_values(by=value_one, ascending=False).head(5)
 
+# Line Chart Data
 df_time = pd.DataFrame(df_region.groupby([grp, 'iyear'], as_index=False)[value_one].sum())
 df_time_sorted = df_time.sort_values(by=value_one, ascending=False)
 top_five_kills = df_time_sorted[grp].unique()[:5].tolist()
@@ -133,10 +136,10 @@ fig_bar.update_layout(
 ## pie chart
 fig_pie = px.pie(df_pie, values=value_one, names=grp)
 fig_pie.update_layout(showlegend=False,
-    width=250,
-    height=250,
+    width=200,
+    height=200,
     margin=dict(
-        l=50,
+        l=100,
         r=0,
         b=0,
         t=0,
@@ -239,7 +242,7 @@ app.layout = html.Div(children=[
                 dcc.Graph(id="scatter-map", figure=fig_map)
                 ]),
             ]),
-         dbc.Row(children=[
+        dbc.Row(children=[
              dcc.Slider(id="birth-year-slider",
                             min=years_attack.min(),
                             max=years_attack.max(),
@@ -247,6 +250,22 @@ app.layout = html.Div(children=[
                             step=1,
                     )
         ]),
+        # droprows
+        dbc.Row([
+            dbc.Col([
+                dcc.Dropdown(id="value-one", options=value_one_option)
+            ]),
+            dbc.Col([
+                dcc.Dropdown(id="value-two", options=value_two_option)
+            ]),
+            dbc.Col([
+                dcc.Dropdown(id="grouping-filter", options=grp_option)
+            ]),
+            dbc.Col([
+                dcc.Dropdown(id="region-dropdown", options=region_options, value=None)
+            ])
+        ]),
+        # small scatter map, bar chart, and pie chart
         dbc.Row(children=[
              dbc.Col(children=[
                 dcc.Graph(id="scatter-map-small", figure=fig_map_small)
@@ -255,18 +274,15 @@ app.layout = html.Div(children=[
                 dcc.Graph(id="bar-chart", figure=fig_bar)
             ], width=4),
             dbc.Col(children=[
-                html.Div(children=[dcc.Dropdown(id="region-dropdown", 
-                                                options=region_options, value=None)], 
-                                                className='mb-2'),
                 dcc.Graph(id="pie-chart", figure=fig_pie)
             ], width=4),
         ]),
+        # line chart and stacked bar chart
         dbc.Row(children=[
             dbc.Col(children=[
                 dcc.Graph(id="line-chart", figure=fig_line)
             ], width=4),
             dbc.Col(children=[
-                dcc.Dropdown(id="stacked-dropdown", options=grp_option),
                 dcc.Graph(id="stacked-chart", figure=fig_stacked)
             ], width=4),
         ])
@@ -281,6 +297,7 @@ app.layout = html.Div(children=[
 
 def update_attack_map(selected_year):
 
+    # update data
     scatter_dict_region = {}
     for i in region_option:
         df_selected_region = df[df['region_txt'] == i].reset_index(drop=True)
@@ -311,6 +328,7 @@ def update_attack_map(selected_year):
     else:
         top_10_groups_all_regions = top_10_groups_all_regions[top_10_groups_all_regions['iyear'] == selected_year]
 
+    # update big map plot
     fig_map = px.scatter_mapbox(top_10_groups_all_regions,
                         lat='latitude',
                         lon='longitude',
@@ -328,8 +346,11 @@ def update_attack_map(selected_year):
 )
 
 def display_small_map(selected_region):
+
+    # update data
     region_to_map = top_10_groups_all_regions[top_10_groups_all_regions['region_txt'] == selected_region]
 
+    # update small map plot
     fig_map_small = px.scatter_mapbox(region_to_map,
                         lat='latitude',
                         lon='longitude',
@@ -340,25 +361,28 @@ def display_small_map(selected_region):
 
     return fig_map_small
 
-# grouped bar callback
+# stacked bar callback
 @callback(
     Output('stacked-chart', 'figure'),
-    Output('pie-chart', 'figure'),
-    Input('stacked-dropdown', 'value')
+    Input('value-one', 'value'),
+    Input('grouping-filter', 'value'),
+    Input('region-dropdown', 'value')
 )
 
-def update_stacked_and_pie(selected_group):
+def update_stacked(value_one, selected_group, selected_region):
 
-    # updated pie data
-    df_pie = pd.DataFrame(df_region.groupby(selected_group)[value_one].sum()).reset_index()
-    df_pie = df_pie.sort_values(by=value_one, ascending=False).head(9)
+    df_region = df.loc[df['region_txt'] == selected_region].reset_index(drop=True)
+
+    # updated order data
+    df_top = pd.DataFrame(df_region.groupby(selected_group)[value_one].sum()).reset_index()
+    df_top = df_top.sort_values(by=value_one, ascending=False).head(9)
 
     # updated stacked data
-    df_stacked = pd.DataFrame(df_region.groupby(['country_txt', selected_group])[value_one].sum())
+    df_stacked = pd.DataFrame(df_region.groupby(['counxtry_txt', selected_group])[value_one].sum())
     df_stacked = df_stacked.sort_values(by=[value_one])
     df_stacked = df_stacked.reset_index()
 
-    top_group = df_pie[selected_group].unique().tolist()
+    top_group = df_top[selected_group].unique().tolist()
     top_group.append('country_txt')
     df_stacked_pivot = pd.pivot_table(data=df_stacked,
                                       index='country_txt',
@@ -369,27 +393,27 @@ def update_stacked_and_pie(selected_group):
     df_stacked_pivot = df_stacked_pivot.reset_index()
     df_stacked_pivot = df_stacked_pivot[top_group]
 
-    # updated pie visualization
-    fig_pie = px.pie(df_pie, values=value_one, names=selected_group)
-
     # updated stacked visualization
     fig_stacked = px.bar(df_stacked_pivot.reset_index(), x='country_txt', y=df_stacked_pivot.columns)
     fig_stacked.update_layout(width=400, 
                               height=350, 
                               margin=dict(l=0, r=0, b=0, t=0, pad=3), 
                               legend=dict(yanchor="top", y=0.99, xanchor="right", x=0.99), 
-                              font=dict(size=9,))
+                              font=dict(size=9))
     
-    
-    return fig_stacked, fig_pie
+    return fig_stacked
 
 # line chart callback
 @callback(
     Output("line-chart", 'figure'),
-    Input("stacked-dropdown", 'value')
+    Input("value-one", 'value'),
+    Input("grouping-filter", 'value'),
+    Input("region-dropdown", 'value')
 )
 
-def update_line_chart(selected_group):
+def update_line_chart(value_one, selected_group, selected_region):
+
+    df_region = df.loc[df['region_txt'] == selected_region]
 
     # updated data
     df_pie = pd.DataFrame(df_region.groupby(selected_group)[value_one].sum()).reset_index()
@@ -399,35 +423,51 @@ def update_line_chart(selected_group):
     df_time_sorted = df_time.sort_values(by=value_one, ascending=False)
     top_five_kills = df_time_sorted[selected_group].unique()[:5].tolist()
     df_time = df_time.loc[(df_time[selected_group] == top_five_kills[0]) | 
-                        (df_time[selected_group] == top_five_kills[1]) | 
-                        (df_time[selected_group] == top_five_kills[2]) | 
-                        (df_time[selected_group] == top_five_kills[3]) | 
-                        (df_time[selected_group] == top_five_kills[4])]
+                          (df_time[selected_group] == top_five_kills[1]) | 
+                          (df_time[selected_group] == top_five_kills[2]) | 
+                          (df_time[selected_group] == top_five_kills[3]) | 
+                          (df_time[selected_group] == top_five_kills[4])]
     
     # updated chart
     fig_line = px.area(df_time, x='iyear', y=value_one, color=selected_group)
     fig_line.update_layout(
         width=400,
         height=350,
-        margin=dict(
-            l=0,
-            r=0,
-            b=0,
-            t=0,
-            pad=3
-        ),
-        legend=dict(
-            yanchor="top",
-            y=0.99,
-            xanchor="left",
-            x=0.01
-        ),
-        font=dict(
-                size=9,
-        )
-    )
+        margin=dict(l=0, r=0, b=0, t=0, pad=3),
+        legend=dict(yanchor="top",
+                    y=0.99,
+                    xanchor="left",
+                    x=0.01),
+        font=dict(size=9))
 
     return fig_line
+
+# grouped bar callback
+@callback(
+    Output('bar-chart', 'figure'),
+    Input('value-one', 'value'),
+    Input('value-two', 'value'),
+    Input('region-dropdown', 'value')
+)
+
+def update_grouped_bar(value_one, value_two, selected_region):
+    df_region = df.loc[df_region['region_txt'] == selected_region]
+
+    # update data
+    df_hor_bar = df_region.groupby(['country_txt'])[[value_one, value_two]].sum().reset_index()
+    df_hor_bar = df_hor_bar.sort_values(by=value_one, ascending=True).tail(5)
+    
+    # update visualization
+    fig_bar = px.bar(df_hor_bar, x=[value_one, value_two], y='country_txt', orientation='h', barmode='group')
+    fig_bar.update_layout(width=400,
+                          height=350,
+                          margin=dict(l=0, r=0, b=0, t=0, pad=3),
+                          legend=dict(yanchor="bottom",
+                                      y=0.01,
+                                      xanchor="right",
+                                      x=0.99),
+                        font=dict(size=9))
+    return fig_bar
 
 # Run the app
 if __name__ == '__main__':
