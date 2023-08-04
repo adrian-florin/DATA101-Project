@@ -99,7 +99,7 @@ fig_map = px.scatter_mapbox(top_10_groups_all_regions,
                         hover_name="city",
                         color=grp,
                         zoom=1)
-fig_map.update_layout(showlegend=False)
+fig_map.update_layout(showlegend=True)
 
 ## small map
 fig_map_small = px.scatter_mapbox(top_10_groups_all_regions,
@@ -371,7 +371,7 @@ def display_small_map(selected_region):
 
 def update_stacked(value_one, selected_group, selected_region):
 
-    df_region = df.loc[df['region_txt'] == selected_region].reset_index(drop=True)
+    df_region = df.loc[df['region_txt'] == selected_region]
 
     # updated order data
     df_top = pd.DataFrame(df_region.groupby(selected_group)[value_one].sum()).reset_index()
@@ -384,6 +384,7 @@ def update_stacked(value_one, selected_group, selected_region):
 
     top_group = df_top[selected_group].unique().tolist()
     top_group.append('country_txt')
+    
     df_stacked_pivot = pd.pivot_table(data=df_stacked,
                                       index='country_txt',
                                       columns=selected_group,
@@ -444,14 +445,14 @@ def update_line_chart(value_one, selected_group, selected_region):
 
 # grouped bar callback
 @callback(
-    Output('bar-chart', 'figure'),
-    Input('value-one', 'value'),
-    Input('value-two', 'value'),
-    Input('region-dropdown', 'value')
+    Output("bar-chart", 'figure'),
+    Input("value-one", 'value'),
+    Input("value-two", 'value'),
+    Input("region-dropdown", 'value')
 )
 
 def update_grouped_bar(value_one, value_two, selected_region):
-    df_region = df.loc[df_region['region_txt'] == selected_region]
+    df_region = df.loc[df['region_txt'] == selected_region]
 
     # update data
     df_hor_bar = df_region.groupby(['country_txt'])[[value_one, value_two]].sum().reset_index()
