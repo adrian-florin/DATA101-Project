@@ -253,13 +253,13 @@ app.layout = html.Div(children=[
         # droprows
         dbc.Row([
             dbc.Col([
-                dcc.Dropdown(id="value-one", options=value_one_option)
+                dcc.Dropdown(id="value-one", options=value_one_option, value=None)
             ]),
             dbc.Col([
-                dcc.Dropdown(id="value-two", options=value_two_option)
+                dcc.Dropdown(id="value-two", options=value_two_option, value=None)
             ]),
             dbc.Col([
-                dcc.Dropdown(id="grouping-filter", options=grp_option)
+                dcc.Dropdown(id="grouping-filter", options=grp_option, value=None)
             ]),
             dbc.Col([
                 dcc.Dropdown(id="region-dropdown", options=region_options, value=None)
@@ -371,20 +371,20 @@ def display_small_map(selected_region):
 
 def update_stacked(value_one, selected_group, selected_region):
 
-    df_region = df.loc[df['region_txt'] == selected_region]
+    df_region = df.loc[df['region_txt'] == selected_region].reset_index(drop=True)
 
     # updated order data
     df_top = pd.DataFrame(df_region.groupby(selected_group)[value_one].sum()).reset_index()
-    df_top = df_top.sort_values(by=value_one, ascending=False).head(9)
+    df_top = df_top.sort_values(by=value_one, ascending=False).head()
 
     # updated stacked data
-    df_stacked = pd.DataFrame(df_region.groupby(['counxtry_txt', selected_group])[value_one].sum())
+    df_stacked = pd.DataFrame(df_region.groupby(['country_txt', selected_group])[value_one].sum())
     df_stacked = df_stacked.sort_values(by=[value_one])
     df_stacked = df_stacked.reset_index()
 
     top_group = df_top[selected_group].unique().tolist()
     top_group.append('country_txt')
-    
+
     df_stacked_pivot = pd.pivot_table(data=df_stacked,
                                       index='country_txt',
                                       columns=selected_group,
@@ -469,6 +469,48 @@ def update_grouped_bar(value_one, value_two, selected_region):
                                       x=0.99),
                         font=dict(size=9))
     return fig_bar
+
+# pie chart callback
+@ callback(
+    Output("pie-chart", 'figure'),
+    Input("value-one", 'value'),
+    Input("grouping-filter", 'value'),
+    Input("region-dropdown", 'value')
+)
+
+def update_pie_chart(value_one_select, selected_group, selected_region):
+
+    df_region = df.loc[df['region_txt'] == selected_region]
+
+    #updated data
+    df_pie = pd.DataFrame(df_region.groupby(selected_group)[value_one_select].sum()).reset_index()
+    df_pie = df_pie.sort_values(by=value_one_select, ascending=False).head(5)
+
+    # update visualization
+    fig_pie = px.pie(df_pie, values=value_one_select, names=selected_group)
+    fig_pie.update_layout(showlegend=False,
+        width=200,
+        height=200,
+        margin=dict(
+            l=100,
+            r=0,
+            b=0,
+            t=0,
+            pad=3
+        ),
+        legend=dict(
+            yanchor="bottom",
+            y=0.01,
+            xanchor="right",
+            x=0.99
+        ),
+        font=dict(
+                size=9,
+        )
+    )
+    
+    return fig_pie
+
 
 # Run the app
 if __name__ == '__main__':
