@@ -5,6 +5,8 @@ import dash_bootstrap_components as dbc
 
 #Import data
 df = pd.read_csv('https://media.githubusercontent.com/media/adrian-florin/datasets/main/terrorism_data.csv', encoding="ISO-8859-1", low_memory=False)
+df['nperps'] = abs(df['nperps'])
+df['nperpcap'] = abs(df['nperpcap'])
 df['count'] = 1
 years_attack = df['iyear'].unique()
 
@@ -25,7 +27,7 @@ region = 'Middle East & North Africa'
 region_option = df['region_txt'].unique()
 grp_option = ['gname', 'attacktype1_txt', 'targtype1_txt', 'weaptype1_txt']
 value_one_option = ['nkill', 'nwound']
-value_two_option = ['count']
+value_two_option = ['count', 'nperps', 'nperpcap']
 
 #Data Transformation
 df_region = df.loc[df['region_txt'] == region_option[0]].reset_index(drop=True)
@@ -157,7 +159,7 @@ fig_pie.update_layout(showlegend=False,
 )
 
 ## line chart
-fig_line = px.area(df_time, x='iyear', y=value_one, color=grp)
+fig_line = px.area(df_time, x='iyear', y=value_one, color=grp, title=f'Number of {value_one} in {region} per {grp}')
 fig_line.update_layout(
     width=400,
     height=350,
@@ -335,7 +337,7 @@ def update_attack_map(selected_year):
                         hover_name="city",
                         color=grp,
                         zoom=1)
-    fig_map.update_layout(showlegend=False)
+    fig_map.update_layout(showlegend=True)
 
     return fig_map
 
@@ -430,7 +432,7 @@ def update_line_chart(value_one, selected_group, selected_region):
                           (df_time[selected_group] == top_five_kills[4])]
     
     # updated chart
-    fig_line = px.area(df_time, x='iyear', y=value_one, color=selected_group)
+    fig_line = px.area(df_time, x='iyear', y=value_one, color=selected_group, title=f'Number of {value_one} in {selected_region} per {selected_group}')
     fig_line.update_layout(
         width=400,
         height=350,
