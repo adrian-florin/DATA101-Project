@@ -271,6 +271,10 @@ for i in regions:
 app.layout = html.Div(children=[
     navbar,
     dbc.Container([
+        dbc.Row(
+            children='Worldwide Attacks over Time', 
+            style={'textAlign': 'center', 'color': 'black', 'fontSize': 30, 'padding-top' : '20px', 'padding-left' : '20px'}, 
+        ),
          dbc.Row(children=[
             dcc.Slider(id="birth-year-slider",
                         min=years_attack.min(),
@@ -284,7 +288,11 @@ app.layout = html.Div(children=[
                 ]),
             ]),
         html.Hr(),
-       
+        # dropdown label
+        dbc.Row(
+            children='Select Filtering', 
+            style={'textAlign': 'center', 'color': 'black', 'fontSize': 30, 'padding-bottom' : '20px', 'padding-left' : '20px'}, 
+        ),
         # droprows
         dbc.Row([
             dbc.Col([
@@ -299,10 +307,12 @@ app.layout = html.Div(children=[
             dbc.Col([
                 dcc.Dropdown(id="region-dropdown", options=region_options, value=None, placeholder="Region")
             ])
-        ]),
+        ], style={'padding-bottom' : '20px'}),
+        html.Hr(),
+        # row 1 label
         dbc.Row(
-            children='Visualzation', 
-            style={'textAlign': 'center', 'color': 'blue', 'fontSize': 30, 'padding' : '20px'}, 
+            children='Visualization', 
+            style={'textAlign': 'center', 'color': 'black', 'fontSize': 30, 'padding-bottom' : '20px', 'padding-left' : '20px'}, 
         ),
         # small scatter map, bar chart
         dbc.Row(children=[
@@ -312,7 +322,13 @@ app.layout = html.Div(children=[
             dbc.Col(children=[
                 dcc.Graph(id="bar-chart", figure=fig_bar)
             ], width=8, className="mt-3"),
-        ], style={'padding' : '40px'}),
+        ]),
+        html.Hr(),
+        # row 2 label
+        dbc.Row(
+            children='Category-based', 
+            style={'textAlign': 'center', 'color': 'black', 'fontSize': 30, 'padding-bottom' : '20px', 'padding-left' : '20px'}, 
+        ),
         # line chart and stacked bar chart, and pie chart
         dbc.Row(children=[
             dbc.Col(children=[
