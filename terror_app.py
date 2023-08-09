@@ -65,6 +65,8 @@ top_10_groups_per_region_list = top_10_groups_per_region['Terrorist Group'].toli
 top_10_groups_all_regions = df[df['Terrorist Group'].isin(top_10_groups_per_region_list)]
 top_10_groups_all_regions = top_10_groups_all_regions[top_10_groups_all_regions['Year'] == 1970]
 
+# title font size
+title_font_size = 12
 
 # Horizontal Bar Chart Data
 df_hor_bar = df_region.groupby(['Country'])[[value_one, value_two]].sum().reset_index()
@@ -118,7 +120,7 @@ fig_map.update_layout(showlegend=True,
                         x=0.01  
                         ),
                         legend_bgcolor='rgba(0, 0, 0, 0)',
-                        title = (f'Terrorist Activities in {region}')
+                        title = dict(text = f"Terrorist Activities in the World", automargin=True, yref='paper')
                     )
 
 ## small map
@@ -129,14 +131,24 @@ fig_map_small = px.scatter_mapbox(top_10_groups_all_regions,
                         color=grp,
                         zoom=2,
                         color_discrete_sequence=px.colors.qualitative.T10)
-fig_map_small.update_layout(height=270, width=350, margin={"r":0,"t":0,"l":0,"b":0}, showlegend=False)
+fig_map_small.update_layout(height=400, 
+                            width=400, 
+                            margin={"r":0,"t":0,"l":0,"b":0}, 
+                            showlegend=False, 
+                            title = dict(text=f"Terrorist Activities in the {region}", 
+                                         automargin=True, 
+                                         font=dict(size=title_font_size), 
+                                         yanchor="top",
+                                         y=0.99,
+                                         xanchor="left",
+                                         x=0.01))
 
 
-## grouped bar
+## horizontal bar chart
 fig_bar = px.bar(df_hor_bar, x=[value_one, value_two], y='Country', orientation='h', barmode='group', color_discrete_sequence=px.colors.qualitative.Safe)
 fig_bar.update_layout(
     width=800,
-    height=300,
+    height=400,
     margin=dict(
         l=0,
         r=0,
@@ -156,20 +168,25 @@ fig_bar.update_layout(
     ),
     legend_title_text="Count",
     xaxis_title="Count",
-    title = (f"Number of {value_one} and {value_two} in {region}")
+    title = dict(text=f"{value_one} and {value_two} in {region}", 
+                 automargin=True, 
+                 font=dict(size=title_font_size), 
+                 yanchor="top",
+                 y=0.99,
+                 xanchor="left",
+                 x=0.01)
 )
 
 ## pie chart
 fig_pie = px.pie(df_pie, values=value_one, names=grp, color_discrete_sequence=px.colors.qualitative.Prism)
 fig_pie.update_layout(showlegend=False,
-    width=300,
-    height=280,
-    margin=dict(
-        l=0,
-        r=0,
-        b=0,
-        t=0,
-        pad=0
+    width=400,
+    height=400,
+    margin=dict(l=0,
+                r=0,
+                b=0,
+                t=0,
+                pad=0
     ),
     legend=dict(
         yanchor="bottom",
@@ -180,13 +197,22 @@ fig_pie.update_layout(showlegend=False,
     font=dict(
             size=8,
     ),
+    title = dict(text = f"Percentage of {value_one} by {grp}", automargin=True, font=dict(size=title_font_size), yanchor="top",
+                                         y=0.99,
+                                         xanchor="left",
+                                         x=0.01)
 )
 
 ## line chart
-fig_line = px.area(df_time, x='Year', y=value_one, color=grp, color_discrete_sequence=px.colors.qualitative.Prism)
+fig_line = px.area(df_time, 
+                   x='Year', 
+                   y=value_one, 
+                   color=grp, 
+                   color_discrete_sequence=px.colors.qualitative.Prism, 
+                   )
 fig_line.update_layout(
-    width=350,
-    height=300,
+    width=400,
+    height=400,
     margin=dict(
         l=0,
         r=0,
@@ -205,14 +231,18 @@ fig_line.update_layout(
     font=dict(
             size=9,
     ),
-    legend_bgcolor='rgba(0, 0, 0, 0)'
+    legend_bgcolor='rgba(0, 0, 0, 0)', 
+    title = dict(text = f"Timeline of {value_one} in {region}", automargin=True, font=dict(size=title_font_size), yanchor="top",
+                                       y=0.99,
+                                       xanchor="left",
+                                       x=0.01)
 )
 
 ## stacked bar chart
 fig_stacked = px.bar(df_stacked_pivot.reset_index(), x='Country', y=df_stacked_pivot.columns, color_discrete_sequence=px.colors.qualitative.Prism)
 fig_stacked.update_layout(
-    width=370,
-    height=300,
+    width=400,
+    height=400,
     margin=dict(
         l=0,
         r=0,
@@ -233,7 +263,11 @@ fig_stacked.update_layout(
     ),
     legend_bgcolor='rgba(0, 0, 0, 0)',
     legend_title_text=grp,
-    yaxis_title=value_one)
+    yaxis_title=value_one, 
+    title = dict(text = f"Number of {value_one} based on {grp}", automargin=True, font=dict(size=title_font_size), yanchor="top",
+                                     y=0.99,
+                                     xanchor="left",
+                                     x=0.01))
 
 
 # Initialize Dash application
@@ -272,8 +306,13 @@ app.layout = html.Div(children=[
     navbar,
     dbc.Container([
         dbc.Row(
-            children='Worldwide Attacks over Time', 
-            style={'textAlign': 'center', 'color': 'black', 'fontSize': 30, 'padding-top' : '20px', 'padding-left' : '20px'}, 
+            children=[
+                dcc.Markdown('''
+                    ### Worldwide Terrorist Attacks
+                    Use the slider to view the cumulative amount of attacks based on the selected year
+                ''')
+            ], 
+            style={'textAlign': 'left', 'color': 'black', 'padding-top' : '10px', 'padding-left' : '20px'}, 
         ),
          dbc.Row(children=[
             dcc.Slider(id="birth-year-slider",
@@ -282,16 +321,23 @@ app.layout = html.Div(children=[
                         marks=years_options,
                         step=1)
         ], className="mt-3"),
+        # big map
         dbc.Row(children=[
             dbc.Col(children=[
                 dcc.Graph(id="scatter-map", figure=fig_map)
                 ]),
-            ]),
+            ], style={'padding' : '20px'}),
         html.Hr(),
         # dropdown label
         dbc.Row(
-            children='Select Filtering', 
-            style={'textAlign': 'center', 'color': 'black', 'fontSize': 30, 'padding-bottom' : '20px', 'padding-left' : '20px'}, 
+            children=[
+                dcc.Markdown('''
+                    ### Select Filtering
+                    Select the type of filters to be applied on the graphs within the dashboard using the
+                    dropdown menus below for each values, category, and region.
+                ''')
+            ], 
+            style={'textAlign': 'left', 'color': 'black', 'padding-bottom' : '2px', 'padding-left' : '20px'}, 
         ),
         # droprows
         dbc.Row([
@@ -311,8 +357,14 @@ app.layout = html.Div(children=[
         html.Hr(),
         # row 1 label
         dbc.Row(
-            children='Visualization', 
-            style={'textAlign': 'center', 'color': 'black', 'fontSize': 30, 'padding-bottom' : '20px', 'padding-left' : '20px'}, 
+            children=[
+                dcc.Markdown('''
+                    ### Region based Visualizations
+                    The map and grouped bar chart shows the appropriate visualization based on the selected region and
+                    values that were selected
+                ''')
+            ], 
+            style={'textAlign': 'left', 'color': 'black', 'padding-left' : '20px'}, 
         ),
         # small scatter map, bar chart
         dbc.Row(children=[
@@ -326,8 +378,13 @@ app.layout = html.Div(children=[
         html.Hr(),
         # row 2 label
         dbc.Row(
-            children='Category-based', 
-            style={'textAlign': 'center', 'color': 'black', 'fontSize': 30, 'padding-bottom' : '20px', 'padding-left' : '20px'}, 
+            children=[
+                dcc.Markdown('''
+                    ### Region and Category based Visualizations
+                    The charts show the percentage of the selected values within the region based on the selected grouping type
+                ''')
+            ], 
+            style={'textAlign': 'left', 'color': 'black', 'padding-left' : '20px'}, 
         ),
         # line chart and stacked bar chart, and pie chart
         dbc.Row(children=[
@@ -379,9 +436,11 @@ def update_attack_map(selected_year):
         
     if selected_year is None:
         top_10_groups_all_regions = top_10_groups_all_regions[top_10_groups_all_regions['Year'] == 1970]
+        big_map_title = 1970
 
     else:
         top_10_groups_all_regions = top_10_groups_all_regions[top_10_groups_all_regions['Year'] == selected_year]
+        big_map_title = selected_year
 
     # update big map plot
     fig_map = px.scatter_mapbox(top_10_groups_all_regions,
@@ -392,14 +451,12 @@ def update_attack_map(selected_year):
                         zoom=1,
                         )
     fig_map.update_layout(showlegend=True, 
-                      height=500, 
-                      margin={"r":15,"t":15,"l":15,"b":15},legend=dict(
-                        yanchor="top",
-                        y=0.99,xanchor="left",
-                        x=0.01
-                        ),
-                        legend_bgcolor='rgba(0, 0, 0, 0)',
-                    )
+                          height=500, 
+                          margin={"r":15,"t":15,"l":15,"b":15},
+                          legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01), 
+                          legend_bgcolor='rgba(0, 0, 0, 0)', 
+                          title = dict(text = f"Terrorist Activities in the World during {big_map_title}", automargin=True, yref='paper')
+                          )
 
     return fig_map
 
@@ -437,9 +494,11 @@ def display_small_map(selected_region):
 
     if selected_region is None:
         region_to_map = top_10_groups_all_regions[top_10_groups_all_regions['Region'] == 'North America']
+        plot_label = "North America"
 
     else:
         region_to_map = top_10_groups_all_regions[top_10_groups_all_regions['Region'] == selected_region]
+        plot_label = selected_region
     # update data
     
 
@@ -451,11 +510,16 @@ def display_small_map(selected_region):
                         color=grp,
                         zoom=2,
                         color_discrete_sequence=px.colors.qualitative.T10)
-    fig_map_small.update_layout(height=270, 
-                                width=350, 
+    fig_map_small.update_layout(height=400, 
+                                width=400, 
                                 margin={"r":0,"t":0,"l":0,"b":0}, 
                                 showlegend=False, 
-                                title = (f'Terrorist Activities in {selected_region}'))
+                                title = dict(text = f"Terrorist Activities in the {plot_label}", 
+                                             automargin=True, 
+                                             font=dict(size=title_font_size), yanchor="top",
+                                             y=0.99,
+                                             xanchor="left",
+                                             x=0.01))
 
     return fig_map_small
 
@@ -494,8 +558,8 @@ def update_stacked(value_one, selected_group, selected_region):
 
     # updated stacked visualization
     fig_stacked = px.bar(df_stacked_pivot.reset_index(), x='Country', y=df_stacked_pivot.columns, color_discrete_sequence=px.colors.qualitative.Prism)
-    fig_stacked.update_layout(width=370, 
-                              height=300, 
+    fig_stacked.update_layout(width=400, 
+                              height=400, 
                               margin=dict(l=0, r=0, b=0, t=0, pad=0), 
                               legend=dict(
                                         yanchor="top",
@@ -507,7 +571,11 @@ def update_stacked(value_one, selected_group, selected_region):
                               font=dict(size=9),
                               legend_bgcolor='rgba(0.5, 0.5, 0.5, 0.5)',
                               legend_title_text=selected_group,
-                              yaxis_title=value_one),
+                              yaxis_title=value_one, 
+                              title = dict(text = f"Number of {value_one} based on {selected_group}", automargin=True, font=dict(size=title_font_size), yanchor="top",
+                                           y=0.99,
+                                           xanchor="left",
+                                           x=0.01)),
                               
     
     return fig_stacked
@@ -540,8 +608,8 @@ def update_line_chart(value_one, selected_group, selected_region):
     # updated chart
     fig_line = px.area(df_time, x='Year', y=value_one, color=selected_group, color_discrete_sequence=px.colors.qualitative.Prism)
     fig_line.update_layout(
-        width=350,
-        height=300,
+        width=400,
+        height=400,
         margin=dict(l=0, r=0, b=0, t=0, pad=0),
         legend=dict(yanchor="top",
                     y=0.99,
@@ -550,7 +618,11 @@ def update_line_chart(value_one, selected_group, selected_region):
                     font=dict(size=7),
                     itemsizing='constant'),
         font=dict(size=9),
-        legend_bgcolor='rgba(0, 0, 0, 0)'
+        legend_bgcolor='rgba(0, 0, 0, 0)', 
+        title = dict(text = f"Timeline {value_one} in {selected_region}", automargin=True, font=dict(size=title_font_size), yanchor="top",
+                                        y=0.99,
+                                        xanchor="left",
+                                        x=0.01)
         )
         
 
@@ -577,10 +649,9 @@ def update_grouped_bar(value_one, value_two, selected_region):
                      y='Country', 
                      orientation='h', 
                      barmode='group', 
-                     color_discrete_sequence=px.colors.qualitative.Safe, 
-                     title = f"Number of {value_one} and {value_two} in {selected_region}")
+                     color_discrete_sequence=px.colors.qualitative.Safe)
     fig_bar.update_layout(width=800,
-                          height=300,
+                          height=400,
                           margin=dict(l=0, r=0, b=0, t=0, pad=0),
                           legend=dict(yanchor="bottom",
                                       y=0.01,
@@ -589,7 +660,14 @@ def update_grouped_bar(value_one, value_two, selected_region):
                           font=dict(size=9),
                           legend_title_text="Count",
                           xaxis_title="Count", 
-                          title = f"Number of {value_one} and {value_two} in {selected_region}")
+                          title = dict(text = f"{value_one} and {value_two} in {selected_region}", 
+                                       automargin=True, 
+                                       font=dict(size=title_font_size), 
+                                       yanchor="top",
+                                       y=0.99,
+                                       xanchor="left",
+                                       x=0.01)
+                        )
     return fig_bar
 
 # pie chart callback
@@ -611,8 +689,8 @@ def update_pie_chart(value_one_select, selected_group, selected_region):
     # update visualization
     fig_pie = px.pie(df_pie, values=value_one_select, names=selected_group, color_discrete_sequence=px.colors.qualitative.Prism)
     fig_pie.update_layout(showlegend=False,
-        width=350,
-        height=280,
+        width=400,
+        height=400,
         margin=dict(
             l=0,
             r=0,
@@ -628,7 +706,14 @@ def update_pie_chart(value_one_select, selected_group, selected_region):
         ),
         font=dict(
                 size=8,
-        )
+        ), 
+        title = dict(text = f"Percentage of {value_one} by {grp}", 
+                     automargin=True, 
+                     font=dict(size=title_font_size), 
+                     yanchor="top",
+                     y=0.99,
+                     xanchor="left",
+                     x=0.01)
     )
     
     return fig_pie
